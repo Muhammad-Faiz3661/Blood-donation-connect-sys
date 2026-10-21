@@ -340,6 +340,8 @@ class _FindDonorsPage extends StatefulWidget {
 }
 
 class _FindDonorsPageState extends State<_FindDonorsPage> {
+  static const _anyBloodGroup = 'Any blood group';
+
   final _searchController = TextEditingController();
   late String _bloodGroup;
 
@@ -360,7 +362,8 @@ class _FindDonorsPageState extends State<_FindDonorsPage> {
   Widget build(BuildContext context) {
     final query = _searchController.text.trim().toLowerCase();
     final matches = widget.controller.availableDonors.where((donor) {
-      final sameGroup = donor.bloodGroup == _bloodGroup;
+      final sameGroup =
+          _bloodGroup == _anyBloodGroup || donor.bloodGroup == _bloodGroup;
       final matchesSearch = query.isEmpty ||
           donor.location.toLowerCase().contains(query) ||
           donor.name.toLowerCase().contains(query);
@@ -382,7 +385,7 @@ class _FindDonorsPageState extends State<_FindDonorsPage> {
             labelText: 'Blood group',
             prefixIcon: Icon(Icons.bloodtype_outlined),
           ),
-          items: bloodGroups
+          items: [_anyBloodGroup, ...bloodGroups]
               .map((group) => DropdownMenuItem(value: group, child: Text(group)))
               .toList(),
           onChanged: (value) {
