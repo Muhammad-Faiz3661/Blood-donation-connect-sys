@@ -1,3 +1,7 @@
+import 'dart:convert';
+import 'dart:math';
+
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 
 import '../data/local_store.dart';
@@ -72,14 +76,18 @@ class AppController extends ChangeNotifier {
     required String location,
     required String bloodGroup,
     required AccountRole role,
+    required String password,
   }) async {
+    final salt = _newPasswordSalt();
     final user = AppUser(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      id: _newUserId(),
       name: name.trim(),
       phone: phone.trim(),
       location: location.trim(),
       bloodGroup: bloodGroup,
       role: role,
+      passwordSalt: salt,
+      passwordHash: _hashPassword(password, salt),
     );
     _users = [..._users, user];
     _currentUserId = user.id;
@@ -88,9 +96,44 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> switchProfile(String? userId) async {
-    _currentUserId = userId;
-    await _store.saveCurrentUserId(userId);
+  Future<bool> login({
+    required String userId,
+    required String password,
+  }) async {
+    final normalizedId = userId.trim().toLowerCase();
+    final matchingUsers = _users.where(
+      (user) => user.id.toLowerCase() == normalizedId,
+    );
+    if (matchingUsers.isEmpty) return false;
+
+    var user = matchingUsers.first;
+    final salt = user.passwordSalt;
+    final passwordHash = user.passwordHash;
+    if (salt == null || passwordHash == null) {
+      final newSalt = _newPasswordSalt();
+      final upgradedUser = user.copyWith(
+        passwordSalt: newSalt,
+        passwordHash: _hashPassword(password, newSalt),
+      );
+      final updatedUsers = _users
+          .map((item) => item.id == user.id ? upgradedUser : item)
+          .toList();
+      await _store.saveUsers(updatedUsers);
+      _users = updatedUsers;
+      user = upgradedUser;
+    } else if (_hashPassword(password, salt) != passwordHash) {
+      return false;
+    }
+
+    _currentUserId = user.id;
+    await _store.saveCurrentUserId(user.id);
+    notifyListeners();
+    return true;
+  }
+
+  Future<void> signOut() async {
+    _currentUserId = null;
+    await _store.saveCurrentUserId(null);
     notifyListeners();
   }
 
@@ -143,4 +186,25 @@ class AppController extends ChangeNotifier {
     await _store.saveRequests(_requests);
     notifyListeners();
   }
+
+  String _newUserId() {
+    final baseId = 'PULSE-${DateTime.now().microsecondsSinceEpoch}';
+    var id = baseId;
+    var suffix = 1;
+    while (_users.any((user) => user.id == id)) {
+      id = '$baseId-$suffix';
+      suffix++;
+    }
+    return id;
+  }
+
+  String _newPasswordSalt() {
+    final random = Random.secure();
+    return List<int>.generate(16, (_) => random.nextInt(256))
+        .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+        .join();
+  }
+
+  String _hashPassword(String password, String salt) =>
+      sha256.convert(utf8.encode('$salt:$password')).toString();
 }

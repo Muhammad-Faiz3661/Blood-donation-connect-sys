@@ -17,30 +17,75 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _locationController = TextEditingController();
+  final _userIdController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   AccountRole _role = AccountRole.recipient;
   String _bloodGroup = 'O+';
   bool _saving = false;
+  bool _isCreatingProfile = false;
+  String? _loginError;
+
+  @override
+  void initState() {
+    super.initState();
+    _isCreatingProfile = widget.controller.users.isEmpty;
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
     _locationController.dispose();
+    _userIdController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
   Future<void> _createProfile() async {
     if (!_formKey.currentState!.validate()) return;
+    final controller = widget.controller;
+    final messenger = ScaffoldMessenger.of(context);
     setState(() => _saving = true);
-    await widget.controller.createProfile(
+    await controller.createProfile(
       name: _nameController.text,
       phone: _phoneController.text,
       location: _locationController.text,
       bloodGroup: _bloodGroup,
       role: _role,
+      password: _passwordController.text,
     );
+    final accountId = controller.currentUser?.id;
+    if (accountId != null) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Profile created. Your account ID is $accountId'),
+          duration: const Duration(seconds: 8),
+        ),
+      );
+    }
     if (mounted) setState(() => _saving = false);
   }
+
+  Future<void> _login() async {
+    if (!_loginFormKey.currentState!.validate()) return;
+    setState(() {
+      _saving = true;
+      _loginError = null;
+    });
+    final success = await widget.controller.login(
+      userId: _userIdController.text,
+      password: _passwordController.text,
+    );
+    if (!mounted) return;
+    setState(() {
+      _saving = false;
+      if (!success) _loginError = 'ID or password is incorrect.';
+    });
+  }
+
+  final _loginFormKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +101,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 const _BrandMark(),
                 const SizedBox(height: 28),
                 Text(
-                  profiles.isEmpty ? 'Give help.\nFind hope.' : 'Who are you here as?',
+                  profiles.isEmpty
+                      ? 'Give help.\nFind hope.'
+                      : _isCreatingProfile
+                          ? 'Create your profile'
+                          : 'Welcome back',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                         height: 1.1,
@@ -67,140 +116,240 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Text(
                   profiles.isEmpty
                       ? 'Create a profile to connect local donors and people in need.'
-                      : 'Choose a saved profile, or create a new one on this device.',
+                      : _isCreatingProfile
+                          ? 'Your account will get a unique ID. Keep it safe with your password.'
+                          : 'Log in with your unique account ID and password.',
                   style: Theme.of(context)
                       .textTheme
                       .bodyLarge
                       ?.copyWith(color: const Color(0xFF716B65), height: 1.45),
                 ),
                 if (profiles.isNotEmpty) ...[
-                  const SizedBox(height: 22),
-                  for (final profile in profiles)
-                    Card(
-                      child: ListTile(
-                        leading: _BloodBadge(group: profile.bloodGroup),
-                        title: Text(profile.name),
-                        subtitle: Text(
-                          '${profile.role == AccountRole.donor ? 'Donor' : 'Recipient'} · ${profile.location}',
-                        ),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                        onTap: () => widget.controller.switchProfile(profile.id),
-                      ),
-                    ),
-                  const SizedBox(height: 26),
-                  Text(
-                    'CREATE A PROFILE',
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          letterSpacing: 1,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF776F68),
-                        ),
-                  ),
                   const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: _saving
+                        ? null
+                        : () => setState(() {
+                              _isCreatingProfile = !_isCreatingProfile;
+                              _loginError = null;
+                              _passwordController.clear();
+                              _confirmPasswordController.clear();
+                            }),
+                    child: Text(
+                      _isCreatingProfile
+                          ? 'Already have an account? Log in'
+                          : 'New here? Create a profile',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                 ],
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      SegmentedButton<AccountRole>(
-                        segments: const [
-                          ButtonSegment(
-                            value: AccountRole.recipient,
-                            label: Text('I need blood'),
-                            icon: Icon(Icons.search),
+                if (_isCreatingProfile)
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SegmentedButton<AccountRole>(
+                          segments: const [
+                            ButtonSegment(
+                              value: AccountRole.recipient,
+                              label: Text('I need blood'),
+                              icon: Icon(Icons.search),
+                            ),
+                            ButtonSegment(
+                              value: AccountRole.donor,
+                              label: Text('I can donate'),
+                              icon: Icon(Icons.volunteer_activism_outlined),
+                            ),
+                          ],
+                          selected: {_role},
+                          onSelectionChanged: (selection) =>
+                              setState(() => _role = selection.first),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _nameController,
+                          textCapitalization: TextCapitalization.words,
+                          decoration: const InputDecoration(
+                            labelText: 'Full name',
+                            prefixIcon: Icon(Icons.person_outline),
                           ),
-                          ButtonSegment(
-                            value: AccountRole.donor,
-                            label: Text('I can donate'),
-                            icon: Icon(Icons.volunteer_activism_outlined),
+                          validator: (value) =>
+                              value == null || value.trim().length < 2
+                                  ? 'Enter your name'
+                                  : null,
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _phoneController,
+                          keyboardType: TextInputType.phone,
+                          decoration: const InputDecoration(
+                            labelText: 'Phone number',
+                            prefixIcon: Icon(Icons.phone_outlined),
+                          ),
+                          validator: (value) =>
+                              value == null || value.trim().length < 7
+                                  ? 'Enter a valid contact number'
+                                  : null,
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _locationController,
+                          textCapitalization: TextCapitalization.words,
+                          decoration: const InputDecoration(
+                            labelText: 'City or area',
+                            prefixIcon: Icon(Icons.location_on_outlined),
+                          ),
+                          validator: (value) =>
+                              value == null || value.trim().isEmpty
+                                  ? 'Enter your city or area'
+                                  : null,
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<String>(
+                          value: _bloodGroup,
+                          decoration: const InputDecoration(
+                            labelText: 'Blood group',
+                            prefixIcon: Icon(Icons.bloodtype_outlined),
+                          ),
+                          items: bloodGroups
+                              .map((group) => DropdownMenuItem(
+                                    value: group,
+                                    child: Text(group),
+                                  ))
+                              .toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() => _bloodGroup = value);
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Create password',
+                            prefixIcon: Icon(Icons.lock_outline),
+                          ),
+                          validator: (value) =>
+                              value == null || value.length < 8
+                                  ? 'Use at least 8 characters'
+                                  : null,
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _confirmPasswordController,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Confirm password',
+                            prefixIcon: Icon(Icons.lock_outline),
+                          ),
+                          validator: (value) =>
+                              value != _passwordController.text
+                                  ? 'Passwords do not match'
+                                  : null,
+                        ),
+                        const SizedBox(height: 20),
+                        FilledButton.icon(
+                          onPressed: _saving ? null : _createProfile,
+                          icon: _saving
+                              ? const SizedBox.square(
+                                  dimension: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.arrow_forward),
+                              label: Text(
+                                _saving ? 'Creating profile...' : 'Create profile',
+                              ),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size.fromHeight(52),
+                            backgroundColor: const Color(0xFFAD3140),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        const Text(
+                          'Profiles and requests stay on this device. This app is not an emergency service.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Color(0xFF77716B),
+                            fontSize: 12,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Form(
+                    key: _loginFormKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TextFormField(
+                          controller: _userIdController,
+                          textCapitalization: TextCapitalization.characters,
+                          decoration: const InputDecoration(
+                            labelText: 'Unique account ID',
+                            prefixIcon: Icon(Icons.badge_outlined),
+                          ),
+                          validator: (value) =>
+                              value == null || value.trim().isEmpty
+                                  ? 'Enter your account ID'
+                                  : null,
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Password',
+                            prefixIcon: Icon(Icons.lock_outline),
+                          ),
+                          validator: (value) =>
+                              value == null || value.isEmpty
+                                  ? 'Enter your password'
+                                  : null,
+                        ),
+                        if (_loginError != null) ...[
+                          const SizedBox(height: 10),
+                          Text(
+                            _loginError!,
+                            style: const TextStyle(color: Color(0xFFAD3140)),
                           ),
                         ],
-                        selected: {_role},
-                        onSelectionChanged: (selection) =>
-                            setState(() => _role = selection.first),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _nameController,
-                        textCapitalization: TextCapitalization.words,
-                        decoration: const InputDecoration(
-                          labelText: 'Full name',
-                          prefixIcon: Icon(Icons.person_outline),
+                        const SizedBox(height: 20),
+                        FilledButton.icon(
+                          onPressed: _saving ? null : _login,
+                          icon: _saving
+                              ? const SizedBox.square(
+                                  dimension: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.login),
+                          label: Text(_saving ? 'Logging in...' : 'Log in'),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size.fromHeight(52),
+                            backgroundColor: const Color(0xFFAD3140),
+                          ),
                         ),
-                        validator: (value) => value == null || value.trim().length < 2
-                            ? 'Enter your name'
-                            : null,
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _phoneController,
-                        keyboardType: TextInputType.phone,
-                        decoration: const InputDecoration(
-                          labelText: 'Phone number',
-                          prefixIcon: Icon(Icons.phone_outlined),
+                        const SizedBox(height: 14),
+                        const Text(
+                          'Profiles and requests stay on this device. This app is not an emergency service.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Color(0xFF77716B),
+                            fontSize: 12,
+                            height: 1.4,
+                          ),
                         ),
-                        validator: (value) => value == null || value.trim().length < 7
-                            ? 'Enter a valid contact number'
-                            : null,
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _locationController,
-                        textCapitalization: TextCapitalization.words,
-                        decoration: const InputDecoration(
-                          labelText: 'City or area',
-                          prefixIcon: Icon(Icons.location_on_outlined),
-                        ),
-                        validator: (value) => value == null || value.trim().isEmpty
-                            ? 'Enter your city or area'
-                            : null,
-                      ),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<String>(
-                        value: _bloodGroup,
-                        decoration: const InputDecoration(
-                          labelText: 'Blood group',
-                          prefixIcon: Icon(Icons.bloodtype_outlined),
-                        ),
-                        items: bloodGroups
-                            .map((group) => DropdownMenuItem(
-                                  value: group,
-                                  child: Text(group),
-                                ))
-                            .toList(),
-                        onChanged: (value) {
-                          if (value != null) setState(() => _bloodGroup = value);
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      FilledButton.icon(
-                        onPressed: _saving ? null : _createProfile,
-                        icon: _saving
-                            ? const SizedBox.square(
-                                dimension: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.arrow_forward),
-                        label: Text(_saving ? 'Creating profile...' : 'Continue'),
-                        style: FilledButton.styleFrom(
-                          minimumSize: const Size.fromHeight(52),
-                          backgroundColor: const Color(0xFFAD3140),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      const Text(
-                        'Profiles and requests stay on this device. This app is not an emergency service.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xFF77716B),
-                          fontSize: 12,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
               ],
             ),
           ),

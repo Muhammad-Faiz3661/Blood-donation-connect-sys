@@ -29,6 +29,8 @@ class AppUser {
     required this.location,
     required this.bloodGroup,
     required this.role,
+    this.passwordSalt,
+    this.passwordHash,
     this.isAvailable = true,
   });
 
@@ -38,15 +40,23 @@ class AppUser {
   final String location;
   final String bloodGroup;
   final AccountRole role;
+  final String? passwordSalt;
+  final String? passwordHash;
   final bool isAvailable;
 
-  AppUser copyWith({bool? isAvailable}) => AppUser(
+  AppUser copyWith({
+    bool? isAvailable,
+    String? passwordSalt,
+    String? passwordHash,
+  }) => AppUser(
         id: id,
         name: name,
         phone: phone,
         location: location,
         bloodGroup: bloodGroup,
         role: role,
+        passwordSalt: passwordSalt ?? this.passwordSalt,
+        passwordHash: passwordHash ?? this.passwordHash,
         isAvailable: isAvailable ?? this.isAvailable,
       );
 
@@ -57,6 +67,8 @@ class AppUser {
         'location': location,
         'bloodGroup': bloodGroup,
         'role': role.name,
+        'passwordSalt': passwordSalt,
+        'passwordHash': passwordHash,
         'isAvailable': isAvailable,
       };
 
@@ -70,6 +82,8 @@ class AppUser {
           (role) => role.name == json['role'],
           orElse: () => AccountRole.recipient,
         ),
+        passwordSalt: json['passwordSalt'] as String?,
+        passwordHash: json['passwordHash'] as String?,
         isAvailable: json['isAvailable'] as bool? ?? true,
       );
 }

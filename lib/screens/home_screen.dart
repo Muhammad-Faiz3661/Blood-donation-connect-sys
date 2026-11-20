@@ -730,6 +730,27 @@ class _ProfilePage extends StatelessWidget {
                   style: const TextStyle(color: Color(0xFF716B65)),
                 ),
                 const Divider(height: 28),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.badge_outlined,
+                      size: 16,
+                      color: Color(0xFF77716B),
+                    ),
+                    const SizedBox(width: 7),
+                    Expanded(
+                      child: SelectableText(
+                        'Account ID: ${user.id}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: const Color(0xFF514B45),
+                              height: 1.4,
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 5),
                 _DetailLine(icon: Icons.bloodtype_outlined, text: user.bloodGroup),
                 _DetailLine(icon: Icons.phone_outlined, text: user.phone),
                 _DetailLine(icon: Icons.location_on_outlined, text: user.location),
@@ -741,7 +762,7 @@ class _ProfilePage extends StatelessWidget {
         OutlinedButton.icon(
           onPressed: () => _showProfiles(context),
           icon: const Icon(Icons.switch_account_outlined),
-          label: const Text('Switch or add profile'),
+          label: const Text('Log out / switch account'),
           style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
         ),
         const SizedBox(height: 16),
@@ -765,36 +786,24 @@ class _ProfilePage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Switch profile',
+                  'Log out',
                   style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                 ),
                 const SizedBox(height: 8),
-                for (final profile in controller.users)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: _BloodBadge(group: profile.bloodGroup),
-                    title: Text(profile.name),
-                    subtitle: Text(
-                      '${profile.role == AccountRole.donor ? 'Donor' : 'Recipient'} · ${profile.location}',
-                    ),
-                    trailing: profile.id == controller.currentUser?.id
-                        ? const Icon(Icons.check_circle, color: Color(0xFF34786F))
-                        : null,
-                    onTap: () {
-                      Navigator.pop(sheetContext);
-                      controller.switchProfile(profile.id);
-                    },
+                const Text(
+                  'You can log in with another account ID or create a new profile after logging out.',
+                  style: TextStyle(color: Color(0xFF716B65), height: 1.4),
                   ),
                 const SizedBox(height: 8),
                 FilledButton.icon(
                   onPressed: () {
                     Navigator.pop(sheetContext);
-                    controller.switchProfile(null);
+                    controller.signOut();
                   },
-                  icon: const Icon(Icons.person_add_alt_1),
-                  label: const Text('Create another profile'),
+                  icon: const Icon(Icons.logout),
+                  label: const Text('Log out'),
                 ),
               ],
             ),

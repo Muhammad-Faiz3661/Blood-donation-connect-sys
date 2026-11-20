@@ -16,8 +16,11 @@ flutter run
 
 ## App flows
 
-- Create a donor or recipient profile with a blood group, phone number, and
-	city or area.
+- Create a donor or recipient profile with a blood group, phone number, city or
+  area, and a password. Each profile receives a unique account ID; find it on
+  the Profile tab and use it with the password to log in after signing out.
+- Existing profiles created before password login was added set a password on
+  their first login.
 - Search available donor profiles by blood group and location.
 - Send a request with a hospital or clinic and optional note.
 - Accepting a request reveals contact details to the two profiles involved.
@@ -29,8 +32,9 @@ flutter run
 ## Data and safety
 
 This is a local-first prototype. Profiles and requests are stored on the device
-using `shared_preferences`; they are not synced between devices. Profile
-switching is for testing and is not secure authentication. A production service
-needs a backend, verified accounts, access controls, and a secure database.
+using `shared_preferences`; they are not synced between devices. Passwords are
+salted and hashed locally, but this is not a substitute for secure production
+authentication. A production service needs a backend, verified accounts,
+access controls, and a secure database.
 Blood group and donor eligibility must be confirmed by a qualified medical
 professional. Pulse is not an emergency service.
