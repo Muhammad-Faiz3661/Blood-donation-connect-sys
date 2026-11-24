@@ -19,6 +19,11 @@ flutter run
 - Create a donor or recipient profile with a blood group, phone number, city or
   area, and a password. Each profile receives a unique account ID; find it on
   the Profile tab and use it with the password to log in after signing out.
+- View profile information in a dedicated, redesigned Profile tab with a
+  profile header, blood group badge, personal-detail cards, and account ID
+  copy option.
+- Switch or log out of the current account from the Profile tab. The account
+  ID can be copied directly for future login.
 - Existing profiles created before password login was added set a password on
   their first login.
 - Search available donor profiles by blood group and location.

@@ -1,4 +1,5 @@
 flutter devicesimport 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../models/app_models.dart';
 import '../state/app_controller.dart';
@@ -692,7 +693,7 @@ class _ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = controller.currentUser!;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
       children: [
         const _PageHeading(
           eyebrow: 'ACCOUNT',
@@ -700,70 +701,202 @@ class _ProfilePage extends StatelessWidget {
           subtitle: 'Your contact details are shared only after a request is accepted.',
         ),
         const SizedBox(height: 18),
-        Card(
+        Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFBD4552), Color(0xFF982936)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x1F000000),
+                blurRadius: 18,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
           child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
+            padding: const EdgeInsets.all(20),
+            child: Row(
               children: [
-                CircleAvatar(
-                  radius: 32,
-                  backgroundColor: const Color(0xFFF2DEDC),
+                Container(
+                  width: 68,
+                  height: 68,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFFFDDE0), width: 3),
+                  ),
+                  alignment: Alignment.center,
                   child: Text(
                     user.name.isEmpty ? '?' : user.name[0].toUpperCase(),
                     style: const TextStyle(
-                      color: Color(0xFFAD3140),
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF982936),
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  user.name,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  user.role == AccountRole.donor ? 'Donor' : 'Recipient',
-                  style: const TextStyle(color: Color(0xFF716B65)),
-                ),
-                const Divider(height: 28),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      Icons.badge_outlined,
-                      size: 16,
-                      color: Color(0xFF77716B),
-                    ),
-                    const SizedBox(width: 7),
-                    Expanded(
-                      child: SelectableText(
-                        'Account ID: ${user.id}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: const Color(0xFF514B45),
-                              height: 1.4,
-                            ),
+                      const SizedBox(height: 5),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0x33FFFFFF),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          user.role == AccountRole.donor ? 'Blood donor' : 'Recipient',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 5),
-                _DetailLine(icon: Icons.bloodtype_outlined, text: user.bloodGroup),
-                _DetailLine(icon: Icons.phone_outlined, text: user.phone),
-                _DetailLine(icon: Icons.location_on_outlined, text: user.location),
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    user.bloodGroup,
+                    style: const TextStyle(
+                      color: Color(0xFF982936),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
         ),
-        const SizedBox(height: 12),
-        OutlinedButton.icon(
+        const SizedBox(height: 18),
+        Text(
+          'Personal details',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF282321),
+              ),
+        ),
+        const SizedBox(height: 10),
+        _ProfileDetailTile(
+          icon: Icons.phone_rounded,
+          label: 'Phone number',
+          value: user.phone,
+        ),
+        const SizedBox(height: 8),
+        _ProfileDetailTile(
+          icon: Icons.location_on_rounded,
+          label: 'Location',
+          value: user.location,
+        ),
+        const SizedBox(height: 8),
+        _ProfileDetailTile(
+          icon: Icons.bloodtype_rounded,
+          label: 'Blood group',
+          value: user.bloodGroup,
+        ),
+        const SizedBox(height: 18),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE8E2DC)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF2DEDC),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.badge_outlined,
+                  color: Color(0xFFAD3140),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Account ID',
+                      style: TextStyle(
+                        color: Color(0xFF716B65),
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    SelectableText(
+                      user.id,
+                      style: const TextStyle(
+                        color: Color(0xFF282321),
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: 'Copy account ID',
+                onPressed: () async {
+                  await Clipboard.setData(ClipboardData(text: user.id));
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Account ID copied')),
+                  );
+                },
+                icon: const Icon(Icons.copy_rounded, size: 20),
+                color: const Color(0xFFAD3140),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        FilledButton.icon(
           onPressed: () => _showProfiles(context),
           icon: const Icon(Icons.switch_account_outlined),
-          label: const Text('Log out / switch account'),
-          style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+          label: const Text('Switch account'),
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFF282321),
+            foregroundColor: Colors.white,
+            minimumSize: const Size.fromHeight(52),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
         ),
         const SizedBox(height: 16),
         const _InfoBanner(
@@ -808,6 +941,64 @@ class _ProfilePage extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      );
+}
+
+class _ProfileDetailTile extends StatelessWidget {
+  const _ProfileDetailTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE8E2DC)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF7F1EC),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: const Color(0xFFAD3140), size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      color: Color(0xFF716B65),
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      color: Color(0xFF282321),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       );
 }
