@@ -1,4 +1,4 @@
-flutter devicesimport 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../models/app_models.dart';
@@ -60,27 +60,45 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Row(
           children: [
-            const Icon(Icons.water_drop, color: Color(0xFFAD3140), size: 22),
-            const SizedBox(width: 8),
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFB92F45), Color(0xFFE76576)],
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.water_drop_rounded, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 10),
             Text(
               'pulse',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w800,
+                    letterSpacing: -0.4,
                   ),
             ),
           ],
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: CircleAvatar(
-              radius: 18,
-              backgroundColor: const Color(0xFFE8D9CF),
+            padding: const EdgeInsets.only(right: 20),
+            child: Container(
+              width: 38,
+              height: 38,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [Color(0xFFF1C7CE), Color(0xFFE7D2C9)],
+                ),
+              ),
               child: Text(
                 user.name.isEmpty ? '?' : user.name[0].toUpperCase(),
                 style: const TextStyle(
-                  color: Color(0xFF533F36),
-                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF8D2737),
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ),
@@ -381,7 +399,7 @@ class _FindDonorsPageState extends State<_FindDonorsPage> {
         ),
         const SizedBox(height: 18),
         DropdownButtonFormField<String>(
-          value: _bloodGroup,
+          initialValue: _bloodGroup,
           decoration: const InputDecoration(
             labelText: 'Blood group',
             prefixIcon: Icon(Icons.bloodtype_outlined),
@@ -498,6 +516,7 @@ class _FindDonorsPageState extends State<_FindDonorsPage> {
     );
 
     if (confirmed == true && mounted) {
+      final messenger = ScaffoldMessenger.of(context);
       await widget.controller.createRequest(
         donor: donor,
         hospital: hospitalController.text,
@@ -505,7 +524,7 @@ class _FindDonorsPageState extends State<_FindDonorsPage> {
         note: noteController.text,
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           const SnackBar(content: Text('Request sent to the donor.')),
         );
       }
@@ -1018,15 +1037,22 @@ class _PageHeading extends StatelessWidget {
   Widget build(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            eyebrow,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: const Color(0xFFAD3140),
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.1,
-                ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8DEE3),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              eyebrow,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: const Color(0xFFAD3140),
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.0,
+                  ),
+            ),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 10),
           Text(
             title,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(

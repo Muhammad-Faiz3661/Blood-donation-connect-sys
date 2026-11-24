@@ -91,15 +91,76 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     final profiles = widget.controller.users;
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
-              children: [
-                const _BrandMark(),
-                const SizedBox(height: 28),
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFFFF8F7), Color(0xFFF8F5F1), Color(0xFFF1EAE3)],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+                children: [
+                  const _BrandMark(),
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFFB92F45), Color(0xFFE76576)],
+                      ),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x2E8A1020),
+                          blurRadius: 24,
+                          offset: Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            profiles.isEmpty
+                                ? 'A single act.\nA lifesaving impact.'
+                                : _isCreatingProfile
+                                    ? 'Create your\nPulse profile'
+                                    : 'Good to\nhave you back',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w800,
+                              height: 1.08,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 76,
+                          height: 76,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Color(0x30FFFFFF),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.favorite_rounded,
+                              color: Colors.white,
+                              size: 38,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 22),
                 Text(
                   profiles.isEmpty
                       ? 'Give help.\nFind hope.'
@@ -207,7 +268,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
-                          value: _bloodGroup,
+                          initialValue: _bloodGroup,
                           decoration: const InputDecoration(
                             labelText: 'Blood group',
                             prefixIcon: Icon(Icons.bloodtype_outlined),
@@ -355,6 +416,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
         ),
       ),
+      ),
     );
   }
 }
@@ -369,8 +431,19 @@ class _BrandMark extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: const Color(0xFFAD3140),
-              borderRadius: BorderRadius.circular(13),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFB92F45), Color(0xFFE76576)],
+              ),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x22B92F45),
+                  blurRadius: 12,
+                  offset: Offset(0, 5),
+                ),
+              ],
             ),
             child: const Icon(Icons.water_drop, color: Colors.white, size: 23),
           ),
@@ -383,29 +456,5 @@ class _BrandMark extends StatelessWidget {
                 ),
           ),
         ],
-      );
-}
-
-class _BloodBadge extends StatelessWidget {
-  const _BloodBadge({required this.group});
-
-  final String group;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        width: 42,
-        height: 42,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF5E2E0),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(
-          group,
-          style: const TextStyle(
-            color: Color(0xFFA83240),
-            fontWeight: FontWeight.w800,
-          ),
-        ),
       );
 }
