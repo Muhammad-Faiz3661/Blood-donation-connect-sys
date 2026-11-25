@@ -415,10 +415,17 @@ class _FindDonorsPageState extends State<_FindDonorsPage> {
         TextField(
           controller: _searchController,
           textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(
-            hintText: 'Search a city or area',
-            prefixIcon: Icon(Icons.location_on_outlined),
-            suffixIcon: Icon(Icons.search),
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            hintText: 'Search donors by name or area',
+            prefixIcon: const Icon(Icons.search),
+            suffixIcon: query.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: 'Clear search',
+                    onPressed: _searchController.clear,
+                    icon: const Icon(Icons.close),
+                  ),
           ),
         ),
         const SizedBox(height: 18),
@@ -431,11 +438,12 @@ class _FindDonorsPageState extends State<_FindDonorsPage> {
         ),
         const SizedBox(height: 10),
         if (matches.isEmpty)
-          const _EmptyState(
+          _EmptyState(
             icon: Icons.person_search_outlined,
             title: 'No donors found',
-            message:
-                'Try another area or check back later. You can add a donor profile from the profile tab on this device.',
+            message: query.isNotEmpty
+                ? 'Try another name or area, or clear your search to see all matching donors.'
+                : 'Try another blood group or check back later. You can add a donor profile from the profile tab on this device.',
           )
         else
           for (final donor in matches)

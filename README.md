@@ -5,6 +5,11 @@ available donor profiles by blood group and area, send requests, and track
 responses. Donors can manage availability, accept or decline requests, and
 mark donations complete.
 
+## Contributors
+
+- Haider Naeem
+- Faizullah
+
 ## Run
 
 Install the Flutter SDK, then from the project root run:
