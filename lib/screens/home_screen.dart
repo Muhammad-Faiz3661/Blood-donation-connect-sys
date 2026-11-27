@@ -55,7 +55,20 @@ class _HomeScreenState extends State<HomeScreen> {
               label: 'Profile',
             ),
           ];
-
+    final pages = IndexedStack(
+      index: _selectedTab,
+      children: isDonor
+          ? [
+              _DonorInbox(controller: widget.controller),
+              _AvailabilityPage(controller: widget.controller),
+              _ProfilePage(controller: widget.controller),
+            ]
+          : [
+              _FindDonorsPage(controller: widget.controller),
+              _MyRequestsPage(controller: widget.controller),
+              _ProfilePage(controller: widget.controller),
+            ],
+    );
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -105,20 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: IndexedStack(
-        index: _selectedTab,
-        children: isDonor
-            ? [
-                _DonorInbox(controller: widget.controller),
-                _AvailabilityPage(controller: widget.controller),
-                _ProfilePage(controller: widget.controller),
-              ]
-            : [
-                _FindDonorsPage(controller: widget.controller),
-                _MyRequestsPage(controller: widget.controller),
-                _ProfilePage(controller: widget.controller),
-              ],
-      ),
+      body: pages,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedTab,
         destinations: destinations,
