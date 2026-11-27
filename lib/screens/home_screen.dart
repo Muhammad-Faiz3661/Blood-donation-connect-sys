@@ -20,6 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final user = widget.controller.currentUser!;
     final isDonor = user.role == AccountRole.donor;
+    final wideLayout = MediaQuery.sizeOf(context).width >= 800;
     final destinations = isDonor
         ? const [
             NavigationDestination(
@@ -125,12 +126,37 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: content,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedTab,
-        destinations: destinations,
-        onDestinationSelected: (index) => setState(() => _selectedTab = index),
-      ),
+      body: wideLayout
+          ? Row(
+              children: [
+                NavigationRail(
+                  selectedIndex: _selectedTab,
+                  labelType: NavigationRailLabelType.all,
+                  destinations: destinations
+                      .map(
+                        (destination) => NavigationRailDestination(
+                          icon: destination.icon,
+                          selectedIcon: destination.selectedIcon,
+                          label: Text(destination.label),
+                        ),
+                      )
+                      .toList(),
+                  onDestinationSelected: (index) =>
+                      setState(() => _selectedTab = index),
+                ),
+                const VerticalDivider(width: 1),
+                Expanded(child: content),
+              ],
+            )
+          : content,
+      bottomNavigationBar: wideLayout
+          ? null
+          : NavigationBar(
+              selectedIndex: _selectedTab,
+              destinations: destinations,
+              onDestinationSelected: (index) =>
+                  setState(() => _selectedTab = index),
+            ),
     );
   }
 }
