@@ -69,6 +69,13 @@ class _HomeScreenState extends State<HomeScreen> {
               _ProfilePage(controller: widget.controller),
             ],
     );
+    final content = Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 760),
+        child: pages,
+      ),
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -118,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: pages,
+      body: content,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedTab,
         destinations: destinations,
